@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Vores ølbog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#12181a;--card:#1c2427;--ink:#e8eeef;--mute:#92a3a8;--line:#33403f;--good:#62b05b;--medium:#e0a030;--bad:#d95b50;--on:#101416;--r:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.45}
+main{max-width:880px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:clamp(2rem,6vw,3.2rem);font-weight:800;letter-spacing:-.03em;margin:8px 0 4px}
+.sub{color:var(--mute);margin:0 0 24px}
+#f{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:14px}
+.t{font-weight:600;font-size:.95rem;display:block;margin-bottom:6px}
+input[type=text]{width:100%;font:inherit;font-size:1.1rem;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input[type=text]:focus-visible,button:focus-visible,.rate input:focus-visible+span,.file:focus-within{outline:3px solid var(--ink);outline-offset:2px}
+.rate{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rate label{cursor:pointer}
+.rate input{position:absolute;opacity:0}
+.rate span{display:block;text-align:center;padding:12px 6px;border-radius:8px;border:2px solid var(--line);font-weight:600}
+.rate input:checked+span{color:var(--on);border-color:transparent}
+.rate .g input:checked+span{background:var(--good)}
+.rate .m input:checked+span{background:var(--medium)}
+.rate .b input:checked+span{background:var(--bad)}
+.photo{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.file{display:inline-block;padding:10px 14px;border:2px dashed var(--line);border-radius:8px;cursor:pointer;font-weight:600}
+.file input{display:none}
+#prev{width:84px;height:84px;object-fit:cover;border-radius:8px;display:none}
+button{font:inherit;font-weight:600;cursor:pointer;border-radius:8px;border:0;padding:12px 18px}
+.save{background:var(--medium);color:var(--on);font-size:1.05rem}
+.err{color:var(--bad);font-weight:600;margin:0}
+.err:not(:empty){border:2px solid var(--bad);border-radius:8px;padding:10px 12px}
+.warn{color:var(--medium);margin:14px 0 0;font-size:.92rem}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 14px;align-items:center}
+.chip{background:transparent;border:2px solid var(--line);padding:7px 13px;color:var(--ink)}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--on)}
+.sp{flex:1}
+.mini{background:transparent;color:var(--mute);padding:7px 10px;text-decoration:underline}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.beer{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;border-top:6px solid var(--c)}
+.beer img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#263033}
+.beer img[hidden]{display:none}
+.acts{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tog{background:transparent;border:2px solid var(--line);color:var(--ink);padding:5px 12px;font-size:.9rem}
+.info{padding:12px 14px;display:grid;gap:6px}
+.info h3{margin:0;font-size:1.2rem;line-height:1.2}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge{color:var(--on);background:var(--c);border-radius:99px;padding:2px 12px;font-weight:600;font-size:.9rem}
+.date{color:var(--mute);font-size:.88rem}
+.del{background:transparent;color:var(--mute);padding:4px 8px;text-decoration:underline;font-size:.88rem}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:center;padding:16px;z-index:10}
+.ov[hidden]{display:none}
+.box{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:360px;width:100%}
+.box p{margin:0 0 16px;font-size:1.1rem;font-weight:600;overflow-wrap:anywhere}
+.bt{display:flex;gap:8px;justify-content:flex-end}
+.danger{background:var(--bad);color:var(--on)}
+.empty{grid-column:1/-1;color:var(--mute);padding:28px 0}
+.good{--c:var(--good)}.medium{--c:var(--medium)}.bad{--c:var(--bad)}
+</style>
+</head>
+<body>
+<main>
+<h1>Vores ølbog</h1>
+<p class="sub">Alle de øl vi smager, og hvad vi syntes om dem.</p>
+
+<div id="f">
+  <div><label class="t" for="name">Ølnavn</label><input type="text" id="name" autocomplete="off"></div>
+  <div><span class="t">Hvordan var den?</span>
+    <div class="rate">
+      <label class="g"><input type="radio" name="r" value="good"><span>God</span></label>
+      <label class="m"><input type="radio" name="r" value="medium"><span>Middel</span></label>
+      <label class="b"><input type="radio" name="r" value="bad"><span>Dårlig</span></label>
+    </div></div>
+  <div class="photo">
+    <label class="file">Tilføj et billede<input type="file" id="pic" accept="image/*"></label>
+    <img id="prev" alt="Forhåndsvisning af billedet">
+  </div>
+  <p class="err" id="err" role="alert"></p>
+  <button class="save" type="button" id="save">Gem øl</button>
+</div>
+<p class="warn" id="warn" hidden>Din browser blokerer lagring her, så ølene huskes kun, indtil du lukker siden. Åbn siden fra dit GitHub-link for at beholde dem.</p>
+
+<div class="bar" id="bar"></div>
+<div class="grid" id="list"></div>
+</main>
+
+<div class="ov" id="dlg" hidden>
+  <div class="box" role="alertdialog" aria-modal="true" aria-labelledby="dq">
+    <p id="dq"></p>
+    <div class="bt"><button type="button" class="chip" id="no">Annullér</button><button type="button" class="danger" id="yes">Slet</button></div>
+  </div>
+</div>
+
+<script>
+var LABEL = {good:"God", medium:"Middel", bad:"Dårlig"};
+var db = null, beers = [], filter = "all", photo = "", showPic = {};
+
+function show(m){ var e = document.getElementById("err"); e.textContent = m; if(m) e.scrollIntoView({block:"center"}); }
+
+/* ---- storage: IndexedDB, with in-memory fallback so Save always works ---- */
+function noDb(){ db = null; document.getElementById("warn").hidden = false; render(); }
+try {
+  var req = indexedDB.open("beerlog", 1);
+  req.onupgradeneeded = function(){ req.result.createObjectStore("beers", {keyPath:"id"}); };
+  req.onsuccess = function(){ db = req.result; load(); };
+  req.onerror = noDb;
+} catch (err) { noDb(); }
+
+function load(){
+  if(!db){ render(); return; }
+  db.transaction("beers").objectStore("beers").getAll().onsuccess = function(e){
+    beers = e.target.result.sort(function(a,b){ return b.id - a.id; });
+    render();
+  };
+}
+function put(b){
+  return new Promise(function(res, rej){
+    if(!db){ beers.unshift(b); res(); return; }
+    var tx = db.transaction("beers", "readwrite");
+    tx.objectStore("beers").put(b);
+    tx.oncomplete = res; tx.onerror = function(){ rej(tx.error); };
+  });
+}
+function remove(id){
+  if(!db){ beers = beers.filter(function(b){ return b.id !== id; }); render(); return; }
+  var tx = db.transaction("beers", "readwrite");
+  tx.objectStore("beers").delete(id);
+  tx.oncomplete = load;
+}
+
+/* ---- photo ---- */
+function shrink(file){
+  function out(src, w, h){
+    var k = Math.min(1, 900 / Math.max(w, h));
+    var c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+    c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", .8);
+  }
+  function viaImage(){
+    return new Promise(function(res, rej){
+      var r = new FileReader();
+      r.onerror = rej;
+      r.onload = function(){
+        var img = new Image();
+        img.onload = function(){ try { res(out(img, img.naturalWidth, img.naturalHeight)); } catch (x) { rej(x); } };
+        img.onerror = rej; img.src = r.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }
+  if(window.createImageBitmap){
+    return createImageBitmap(file).then(function(bm){
+      var d = out(bm, bm.width, bm.height); if(bm.close) bm.close(); return d;
+    }).catch(viaImage);
+  }
+  return viaImage();
+}
+document.getElementById("pic").onchange = function(e){
+  var f = e.target.files[0], p = document.getElementById("prev");
+  if(!f){ photo = ""; p.style.display = "none"; return; }
+  shrink(f).then(function(d){ photo = d; p.src = d; p.style.display = "block"; show(""); })
+           .catch(function(){ photo = ""; show("Billedet kunne ikke læses (" + (f.type || "ukendt type") + "). Prøv et andet billede, eller tag et nyt."); });
+};
+
+/* ---- save ---- */
+function saveBeer(){
+  var name = document.getElementById("name").value.trim();
+  var r = document.querySelector("#f input[name=r]:checked");
+  if(!name){ show("Skriv navnet på ølen."); return; }
+  if(!r){ show("Vælg God, Middel eller Dårlig."); return; }
+  put({id: Date.now(), name: name, rating: r.value, photo: photo, date: new Date().toLocaleDateString("da-DK")})
+    .then(function(){
+      document.getElementById("name").value = "";
+      r.checked = false;
+      document.getElementById("pic").value = "";
+      photo = ""; document.getElementById("prev").style.display = "none"; show("");
+      load();
+    })
+    .catch(function(){ show("Kunne ikke gemme. Billedet er måske for stort, prøv et mindre."); });
+}
+document.getElementById("save").onclick = saveBeer;
+document.getElementById("name").onkeydown = function(e){ if(e.key === "Enter"){ e.preventDefault(); saveBeer(); } };
+
+/* ---- display ---- */
+function render(){
+  var n = function(k){ return k === "all" ? beers.length : beers.filter(function(b){ return b.rating === k; }).length; };
+  var bar = document.getElementById("bar");
+  bar.innerHTML = "";
+  ["all","good","medium","bad"].forEach(function(k){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", filter === k);
+    b.textContent = (k === "all" ? "Alle" : LABEL[k]) + " (" + n(k) + ")";
+    b.onclick = function(){ filter = k; render(); };
+    bar.appendChild(b);
+  });
+  bar.insertAdjacentHTML("beforeend", '<span class="sp"></span><button type="button" class="mini" id="ex">Eksportér backup</button><button type="button" class="mini" id="im">Importér backup</button><input type="file" id="imf" accept="application/json" hidden>');
+  document.getElementById("ex").onclick = exportData;
+  document.getElementById("im").onclick = function(){ document.getElementById("imf").click(); };
+  document.getElementById("imf").onchange = importData;
+
+  var list = document.getElementById("list");
+  var shown = beers.filter(function(b){ return filter === "all" || b.rating === filter; });
+  list.innerHTML = "";
+  if(!shown.length){
+    list.innerHTML = '<p class="empty">' + (beers.length ? "Ingen øl i denne gruppe endnu." : "Ingen øl endnu. Tilføj den første ovenfor.") + "</p>";
+    return;
+  }
+  shown.forEach(function(b){
+    var d = document.createElement("article");
+    d.className = "beer " + b.rating;
+    var info = document.createElement("div"); info.className = "info";
+    var h = document.createElement("h3"); h.textContent = b.name;
+    var row = document.createElement("div"); row.className = "row";
+    var badge = document.createElement("span"); badge.className = "badge"; badge.textContent = LABEL[b.rating];
+    var date = document.createElement("span"); date.className = "date"; date.textContent = b.date;
+    row.append(badge, date);
+    var acts = document.createElement("div"); acts.className = "acts";
+    var img = null;
+    if(b.photo){
+      img = document.createElement("img"); img.src = b.photo; img.alt = b.name; img.hidden = !showPic[b.id];
+      var tg = document.createElement("button"); tg.type = "button"; tg.className = "tog";
+      var sync = function(t, i, id){ t.textContent = showPic[id] ? "Skjul billede" : "Vis billede"; t.setAttribute("aria-expanded", !!showPic[id]); i.hidden = !showPic[id]; };
+      sync(tg, img, b.id);
+      tg.onclick = (function(t, i, id){ return function(){ showPic[id] = !showPic[id]; sync(t, i, id); }; })(tg, img, b.id);
+      acts.append(tg);
+    }
+    var del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "Slet";
+    del.onclick = function(){ ask(b.name, function(){ remove(b.id); }); };
+    acts.append(del);
+    info.append(h, row, acts); d.append(info); if(img) d.append(img); list.appendChild(d);
+  });
+}
+
+/* ---- delete confirmation (in-page, because browser popups can be blocked) ---- */
+function closeAsk(){ document.getElementById("dlg").hidden = true; }
+function ask(name, onYes){
+  document.getElementById("dq").textContent = "Slet \u201c" + name + "\u201d? Det kan ikke fortrydes.";
+  document.getElementById("dlg").hidden = false;
+  document.getElementById("yes").onclick = function(){ closeAsk(); onYes(); };
+  document.getElementById("no").onclick = closeAsk;
+  document.getElementById("no").focus();
+}
+document.getElementById("dlg").onclick = function(e){ if(e.target === this) closeAsk(); };
+document.addEventListener("keydown", function(e){ if(e.key === "Escape") closeAsk(); });
+
+/* ---- backup ---- */
+function exportData(){
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(beers)], {type:"application/json"}));
+  a.download = "oelbog-backup.json"; a.click();
+}
+function importData(e){
+  var f = e.target.files[0]; if(!f) return;
+  f.text().then(function(t){
+    var items = JSON.parse(t), jobs = [];
+    items.forEach(function(b){ if(b.id && b.name && LABEL[b.rating]) jobs.push(put(b)); });
+    return Promise.all(jobs);
+  }).then(load).catch(function(){ show("Den fil er ikke en backup af ølbogen."); });
+}
+
+render();
+</script>
+</body>
+</html>
